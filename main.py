@@ -178,3 +178,39 @@ def cmd_fee(args: argparse.Namespace) -> int:
     price = int(args.price)
     fee_bps = int(args.fee_bps) if args.fee_bps else 12
     if price < 0 or fee_bps < 0 or fee_bps > SPEL_MAX_FEE_BPS:
+        print("Invalid price or fee_bps (0-%s)" % SPEL_MAX_FEE_BPS, file=sys.stderr)
+        return 1
+    fee = compute_fee_wei(price, fee_bps)
+    to_seller = compute_seller_receives(price, fee_bps)
+    print("Price: %s wei" % price)
+    print("Fee (bps %s): %s wei" % (fee_bps, fee))
+    print("To seller: %s wei" % to_seller)
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# CLI: hash title/category
+# -----------------------------------------------------------------------------
+
+def cmd_hash(args: argparse.Namespace) -> int:
+    s = args.string
+    kind = (args.kind or "title").lower()
+    if kind == "title":
+        h = title_hash_from_string(s)
+    else:
+        h = category_hash_from_string(s)
+    print(bytes32_to_hex(h))
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# CLI: simulate list
+# -----------------------------------------------------------------------------
+
+def cmd_simulate_list(args: argparse.Namespace) -> int:
+    title = args.title
+    category = args.category
+    price = int(args.price)
+    seller = args.seller or ZERO_ADDRESS
+    if price <= 0:
+        print("Price must be positive", file=sys.stderr)
