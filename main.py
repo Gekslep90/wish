@@ -322,3 +322,39 @@ def cmd_simulate_buy(args: argparse.Namespace) -> int:
     price = int(args.price)
     spell_id = store.list_spell(seller, th, ch, price, block=1000)
     store.delist(spell_id)
+    fee = compute_fee_wei(price, int(args.fee_bps or "12"))
+    to_seller = price - fee
+    print("Simulated buy: spellId=%s price=%s fee=%s toSeller=%s" % (spell_id, price, fee, to_seller))
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# Main CLI
+# -----------------------------------------------------------------------------
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Wish — Spella spell-book trading helper")
+    parser.add_argument("--config", default="", help="Path to wish_config.json")
+    sub = parser.add_subparsers(dest="command", help="Commands")
+
+    p_fee = sub.add_parser("fee", help="Compute fee and seller receives for a price")
+    p_fee.add_argument("price", help="Price in wei")
+    p_fee.add_argument("--fee-bps", default="12", help="Fee in basis points")
+    p_fee.set_defaults(func=cmd_fee)
+
+    p_hash = sub.add_parser("hash", help="Hash a string to bytes32 (title or category)")
+    p_hash.add_argument("string", help="String to hash")
+    p_hash.add_argument("--kind", choices=["title", "category"], default="title")
+    p_hash.set_defaults(func=cmd_hash)
+
+    p_sim = sub.add_parser("simulate-list", help="Simulate listing a spell")
+    p_sim.add_argument("title", help="Spell title string")
+    p_sim.add_argument("category", help="Category string")
+    p_sim.add_argument("price", help="Price in wei")
+    p_sim.add_argument("--seller", default="", help="Seller address")
+    p_sim.set_defaults(func=cmd_simulate_list)
+
+    p_cfg = sub.add_parser("config", help="Show or set config")
+    p_cfg.add_argument("--set-contract", metavar="ADDR", help="Set contract address")
+    p_cfg.add_argument("--set-rpc", metavar="URL", help="Set RPC URL")
+    p_cfg.set_defaults(func=cmd_config)
