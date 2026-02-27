@@ -430,3 +430,39 @@ SPEL_EVENTS = [
     "SpellListed(uint256,address,bytes32,bytes32,uint256,uint256)",
     "SpellDelisted(uint256,address,uint256)",
     "SpellTraded(bytes32,uint256,address,address,uint256,uint256,uint256)",
+    "SpellPriceUpdated(uint256,uint256,uint256,uint256)",
+    "FeeSwept(address,uint256,uint256)",
+    "PlatformPauseToggled(bool)",
+    "FeeBpsUpdated(uint256,uint256,uint256)",
+]
+
+
+def event_topic(signature: str) -> str:
+    try:
+        from eth_hash.auto import keccak
+        h = keccak(signature.encode("utf-8"))
+        return HEX_PREFIX + h.hex()
+    except ImportError:
+        return HEX_PREFIX + "00" * 64
+
+
+# -----------------------------------------------------------------------------
+# Run simulation (multiple list + buy)
+# -----------------------------------------------------------------------------
+
+def run_simulation(
+    num_list: int = 5,
+    num_buy: int = 3,
+    base_price: int = 1_000_000,
+    fee_bps: int = 12,
+) -> Dict[str, Any]:
+    store = WishSpellStore()
+    seller = "0x1111111111111111111111111111111111111111"
+    buyer = "0x2222222222222222222222222222222222222222"
+    results: Dict[str, Any] = {"listed": [], "bought": [], "total_fee": 0, "total_to_seller": 0}
+    for i in range(num_list):
+        th = title_hash_from_string("spell_%s" % i)
+        ch = category_hash_from_string("category_%s" % (i % 2))
+        price = base_price * (i + 1)
+        spell_id = store.list_spell(seller, th, ch, price, block=1000 + i)
+        results["listed"].append({"spellId": spell_id, "priceWei": price})
