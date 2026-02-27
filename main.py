@@ -34,3 +34,39 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
 # -----------------------------------------------------------------------------
+# Hashing (EVM-style bytes32 from string; use eth_hash for keccak in production)
+# -----------------------------------------------------------------------------
+
+def _hash_bytes(data: bytes) -> bytes:
+    try:
+        from eth_hash.auto import keccak
+        return keccak(data)
+    except ImportError:
+        h = hashlib.sha3_256(data).digest() if hasattr(hashlib, "sha3_256") else hashlib.sha256(data).digest()
+        return h[:32] if len(h) >= 32 else h.ljust(32, b"\x00")
+
+
+def title_hash_from_string(s: str) -> bytes:
+    return _hash_bytes(s.encode("utf-8"))
+
+
+def category_hash_from_string(s: str) -> bytes:
+    return _hash_bytes(s.encode("utf-8"))
+
+
+def bytes32_to_hex(b: bytes) -> str:
+    if len(b) > 32:
+        b = b[-32:]
+    return HEX_PREFIX + (b.hex() if isinstance(b, bytes) else b).rjust(64, "0")
+
+
+# -----------------------------------------------------------------------------
+# Fee and price calculations
+# -----------------------------------------------------------------------------
+
+def compute_fee_wei(price_wei: int, fee_bps: int) -> int:
+    if fee_bps > SPEL_MAX_FEE_BPS:
+        raise ValueError("fee_bps must be <= %s" % SPEL_MAX_FEE_BPS)
+    return (price_wei * fee_bps) // SPEL_BPS_BASE
+
+
