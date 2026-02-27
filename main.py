@@ -142,3 +142,39 @@ class WishSpellStore:
         self._counter += 1
         spell_id = self._counter
         self._spells[spell_id] = SpellEntry(
+            spell_id=spell_id,
+            seller=seller,
+            title_hash=title_hash,
+            category_hash=category_hash,
+            price_wei=price_wei,
+            listed_at_block=block,
+            listed=True,
+        )
+        self._spell_ids.append(spell_id)
+        return spell_id
+
+    def delist(self, spell_id: int) -> None:
+        if spell_id not in self._spells:
+            raise ValueError("Spell not found")
+        self._spells[spell_id].listed = False
+
+    def get_spell(self, spell_id: int) -> SpellEntry:
+        if spell_id not in self._spells:
+            raise ValueError("Spell not found")
+        return self._spells[spell_id]
+
+    def get_listed_ids(self) -> List[int]:
+        return [s for s in self._spell_ids if self._spells[s].listed]
+
+    def get_spell_ids(self) -> List[int]:
+        return list(self._spell_ids)
+
+
+# -----------------------------------------------------------------------------
+# CLI: fee calculator
+# -----------------------------------------------------------------------------
+
+def cmd_fee(args: argparse.Namespace) -> int:
+    price = int(args.price)
+    fee_bps = int(args.fee_bps) if args.fee_bps else 12
+    if price < 0 or fee_bps < 0 or fee_bps > SPEL_MAX_FEE_BPS:
