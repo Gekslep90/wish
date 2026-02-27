@@ -286,3 +286,39 @@ def cmd_batch_fee(args: argparse.Namespace) -> int:
         total_to_seller += s
         print("Price %s wei -> fee %s, to seller %s" % (p, f, s))
     print("Total fee: %s wei" % total_fee)
+    print("Total to seller: %s wei" % total_to_seller)
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# Validate address (simple hex length)
+# -----------------------------------------------------------------------------
+
+def is_valid_address(addr: str) -> bool:
+    if not addr or not addr.startswith(HEX_PREFIX):
+        return False
+    raw = addr[2:].strip()
+    return len(raw) == 40 and all(c in "0123456789abcdefABCDEF" for c in raw)
+
+
+def cmd_validate_address(args: argparse.Namespace) -> int:
+    addr = args.address
+    if is_valid_address(addr):
+        print("Valid 40-char hex address")
+        return 0
+    print("Invalid address", file=sys.stderr)
+    return 1
+
+
+# -----------------------------------------------------------------------------
+# Simulate buy (local store)
+# -----------------------------------------------------------------------------
+
+def cmd_simulate_buy(args: argparse.Namespace) -> int:
+    store = WishSpellStore()
+    seller = args.seller or "0x1111111111111111111111111111111111111111"
+    th = title_hash_from_string(args.title)
+    ch = category_hash_from_string(args.category)
+    price = int(args.price)
+    spell_id = store.list_spell(seller, th, ch, price, block=1000)
+    store.delist(spell_id)
