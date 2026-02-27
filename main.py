@@ -70,3 +70,39 @@ def compute_fee_wei(price_wei: int, fee_bps: int) -> int:
     return (price_wei * fee_bps) // SPEL_BPS_BASE
 
 
+def compute_seller_receives(price_wei: int, fee_bps: int) -> int:
+    fee = compute_fee_wei(price_wei, fee_bps)
+    return price_wei - fee
+
+
+# -----------------------------------------------------------------------------
+# Config and state (for CLI)
+# -----------------------------------------------------------------------------
+
+@dataclass
+class WishConfig:
+    contract_address: str = ""
+    rpc_url: str = ""
+    chain_id: int = 1
+    fee_bps: int = 12
+
+
+def load_config(path: Optional[str] = None) -> WishConfig:
+    path = path or os.path.join(os.path.dirname(__file__), "wish_config.json")
+    cfg = WishConfig()
+    if os.path.isfile(path):
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            cfg.contract_address = data.get("contractAddress", "")
+            cfg.rpc_url = data.get("rpcUrl", "")
+            cfg.chain_id = int(data.get("chainId", 1))
+            cfg.fee_bps = int(data.get("feeBps", 12))
+        except Exception:
+            pass
+    return cfg
+
+
+def save_config(cfg: WishConfig, path: Optional[str] = None) -> None:
+    path = path or os.path.join(os.path.dirname(__file__), "wish_config.json")
+    data = {
