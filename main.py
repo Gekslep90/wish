@@ -250,3 +250,39 @@ def cmd_config(args: argparse.Namespace) -> int:
 
 # -----------------------------------------------------------------------------
 # CLI: constants
+# -----------------------------------------------------------------------------
+
+def cmd_constants(args: argparse.Namespace) -> int:
+    print("SPEL_BPS_BASE", SPEL_BPS_BASE)
+    print("SPEL_MAX_FEE_BPS", SPEL_MAX_FEE_BPS)
+    print("SPEL_MAX_SPELLS", SPEL_MAX_SPELLS)
+    print("SPEL_MAX_BATCH_LIST", SPEL_MAX_BATCH_LIST)
+    print("SPEL_MAX_BATCH_DELIST", SPEL_MAX_BATCH_DELIST)
+    print("SPEL_PLATFORM_SALT", hex(SPEL_PLATFORM_SALT))
+    print("VAULT", VAULT_ADDRESS)
+    print("TREASURY", TREASURY_ADDRESS)
+    print("KEEPER", KEEPER_ADDRESS)
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# Batch fee calculator
+# -----------------------------------------------------------------------------
+
+def cmd_batch_fee(args: argparse.Namespace) -> int:
+    prices = [int(x) for x in args.prices.split(",")]
+    fee_bps = int(args.fee_bps) if args.fee_bps else 12
+    if fee_bps < 0 or fee_bps > SPEL_MAX_FEE_BPS:
+        print("Invalid fee_bps", file=sys.stderr)
+        return 1
+    total_fee = 0
+    total_to_seller = 0
+    for p in prices:
+        if p < 0:
+            continue
+        f = compute_fee_wei(p, fee_bps)
+        s = compute_seller_receives(p, fee_bps)
+        total_fee += f
+        total_to_seller += s
+        print("Price %s wei -> fee %s, to seller %s" % (p, f, s))
+    print("Total fee: %s wei" % total_fee)
