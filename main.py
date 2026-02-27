@@ -358,3 +358,39 @@ def main() -> int:
     p_cfg.add_argument("--set-contract", metavar="ADDR", help="Set contract address")
     p_cfg.add_argument("--set-rpc", metavar="URL", help="Set RPC URL")
     p_cfg.set_defaults(func=cmd_config)
+
+    p_const = sub.add_parser("constants", help="Print Spella constants and addresses")
+    p_const.set_defaults(func=cmd_constants)
+
+    p_batch = sub.add_parser("batch-fee", help="Compute fees for multiple prices (comma-separated)")
+    p_batch.add_argument("prices", help="Comma-separated prices in wei")
+    p_batch.add_argument("--fee-bps", default="12")
+    p_batch.set_defaults(func=cmd_batch_fee)
+
+    p_val = sub.add_parser("validate-address", help="Validate an Ethereum address")
+    p_val.add_argument("address", help="0x-prefixed address")
+    p_val.set_defaults(func=cmd_validate_address)
+
+    p_buy = sub.add_parser("simulate-buy", help="Simulate buying a spell (list then delist, show fee)")
+    p_buy.add_argument("title", help="Spell title")
+    p_buy.add_argument("category", help="Category")
+    p_buy.add_argument("price", help="Price in wei")
+    p_buy.add_argument("--seller", default="")
+    p_buy.add_argument("--fee-bps", default="12")
+    p_buy.set_defaults(func=cmd_simulate_buy)
+
+    p_simrun = sub.add_parser("run-simulation", help="Run multi-list and multi-buy simulation, output JSON")
+    p_simrun.add_argument("--num-list", default="5", help="Number of spells to list")
+    p_simrun.add_argument("--num-buy", default="3", help="Number to buy")
+    p_simrun.add_argument("--base-price", default="1000000", help="Base price wei")
+    p_simrun.add_argument("--fee-bps", default="12", help="Fee bps")
+    p_simrun.set_defaults(func=cmd_run_simulation)
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        return 0
+    return args.func(args)
+
+
+# -----------------------------------------------------------------------------
