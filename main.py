@@ -394,3 +394,39 @@ def main() -> int:
 
 
 # -----------------------------------------------------------------------------
+# ABI selectors (for reference / encoding)
+# -----------------------------------------------------------------------------
+
+SPEL_SELECTORS = {
+    "listSpell(bytes32,bytes32,uint256)": "listSpell",
+    "delistSpell(uint256)": "delistSpell",
+    "updateSpellPrice(uint256,uint256)": "updateSpellPrice",
+    "buySpell(uint256)": "buySpell",
+    "sweepFees()": "sweepFees",
+    "getSpell(uint256)": "getSpell",
+    "getListedSpellIds()": "getListedSpellIds",
+    "getSpellIdsBySeller(address)": "getSpellIdsBySeller",
+    "computeFeeForPrice(uint256)": "computeFeeForPrice",
+    "computeSellerReceives(uint256)": "computeSellerReceives",
+}
+
+
+def get_selector(signature: str) -> str:
+    """Return 4-byte selector for a function signature (keccak256 first 4 bytes)."""
+    try:
+        from eth_abi import encode
+        from eth_hash.auto import keccak
+        h = keccak(signature.encode("utf-8"))
+        return HEX_PREFIX + h[:4].hex()
+    except ImportError:
+        return HEX_PREFIX + "00" * 4
+
+
+# -----------------------------------------------------------------------------
+# Event topic hashes (for log filtering)
+# -----------------------------------------------------------------------------
+
+SPEL_EVENTS = [
+    "SpellListed(uint256,address,bytes32,bytes32,uint256,uint256)",
+    "SpellDelisted(uint256,address,uint256)",
+    "SpellTraded(bytes32,uint256,address,address,uint256,uint256,uint256)",
