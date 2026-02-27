@@ -214,3 +214,39 @@ def cmd_simulate_list(args: argparse.Namespace) -> int:
     seller = args.seller or ZERO_ADDRESS
     if price <= 0:
         print("Price must be positive", file=sys.stderr)
+        return 1
+    th = title_hash_from_string(title)
+    ch = category_hash_from_string(category)
+    store = WishSpellStore()
+    spell_id = store.list_spell(seller, th, ch, price, block=1000)
+    print("Simulated list: spellId=%s titleHash=%s categoryHash=%s priceWei=%s" % (
+        spell_id, bytes32_to_hex(th), bytes32_to_hex(ch), price
+    ))
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# CLI: config
+# -----------------------------------------------------------------------------
+
+def cmd_config(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    if args.set_contract:
+        cfg.contract_address = args.set_contract
+        save_config(cfg, args.config)
+        print("Contract address set to", cfg.contract_address)
+        return 0
+    if args.set_rpc:
+        cfg.rpc_url = args.set_rpc
+        save_config(cfg, args.config)
+        print("RPC URL set")
+        return 0
+    print("Contract:", cfg.contract_address or "(not set)")
+    print("RPC URL:", cfg.rpc_url or "(not set)")
+    print("Chain ID:", cfg.chain_id)
+    print("Fee bps:", cfg.fee_bps)
+    return 0
+
+
+# -----------------------------------------------------------------------------
+# CLI: constants
