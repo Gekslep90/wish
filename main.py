@@ -106,3 +106,39 @@ def load_config(path: Optional[str] = None) -> WishConfig:
 def save_config(cfg: WishConfig, path: Optional[str] = None) -> None:
     path = path or os.path.join(os.path.dirname(__file__), "wish_config.json")
     data = {
+        "contractAddress": cfg.contract_address,
+        "rpcUrl": cfg.rpc_url,
+        "chainId": cfg.chain_id,
+        "feeBps": cfg.fee_bps,
+    }
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+# -----------------------------------------------------------------------------
+# In-memory spell store (simulation without RPC)
+# -----------------------------------------------------------------------------
+
+@dataclass
+class SpellEntry:
+    spell_id: int
+    seller: str
+    title_hash: bytes
+    category_hash: bytes
+    price_wei: int
+    listed_at_block: int
+    listed: bool
+
+
+class WishSpellStore:
+    def __init__(self) -> None:
+        self._spells: Dict[int, SpellEntry] = {}
+        self._counter = 0
+        self._spell_ids: List[int] = []
+
+    def list_spell(self, seller: str, title_hash: bytes, category_hash: bytes, price_wei: int, block: int = 0) -> int:
+        if self._counter >= SPEL_MAX_SPELLS:
+            raise ValueError("Max spells reached")
+        self._counter += 1
+        spell_id = self._counter
+        self._spells[spell_id] = SpellEntry(
